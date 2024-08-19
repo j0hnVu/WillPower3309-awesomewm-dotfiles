@@ -96,7 +96,7 @@ sudo apt install -y linux-headers-amd64 nvidia-driver firmware-misc-nonfree
 
 ## Secure Boot (Optional)
 clear
-if [ sudo mokutil --sb-state | grep -q "enabled" ]; then
+if sudo mokutil --sb-state | grep -q "enabled"; then
     if [ ! -d /var/lib/shim-signed/mok/ ]; then
 		sudo mkdir -p /var/lib/shim-signed/mok/
 		cd /var/lib/shim-signed/mok/
@@ -104,6 +104,7 @@ if [ sudo mokutil --sb-state | grep -q "enabled" ]; then
 		sudo openssl x509 -inform der -in MOK.der -out MOK.pem
 		echo "You will be prompt for one-time password." && sleep 1
 		sudo mokutil --import /var/lib/shim-signed/mok/MOK.der
+		sudo touch /etc/dkms/framework.conf
 		echo "mok_signing_key="/var/lib/shim-signed/mok/MOK.priv"" | sudo tee -a /etc/dkms/framework.conf
 		echo "mok_certificate="/var/lib/shim-signed/mok/MOK.der"" | sudo tee -a /etc/dkms/framework.conf
 		echo "sign_tool="/etc/dkms/sign_helper.sh"" | sudo tee -a /etc/dkms/framework.conf
@@ -123,9 +124,6 @@ if [ sudo mokutil --sb-state | grep -q "enabled" ]; then
 else
 	echo "Secure Boot is disabled. Continue" && sleep 1
 fi
-
-
-
 
 # Reboot
 echo "All Done. Reboot now? (y/n)"
