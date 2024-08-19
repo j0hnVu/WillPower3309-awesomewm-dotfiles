@@ -5,7 +5,7 @@
 sudo apt install -y xserver-xorg-video-intel xserver-xorg-core xinit 
 
 # Rec app and shit
-sudo apt install -y git unzip feh libpcre3-dev rofi imagemagick acpi bluez blueman xbacklight scrot i3lock nautilus xfce4-power-manager curl tar grep gpg
+sudo apt install -y git unzip feh libpcre3-dev rofi imagemagick acpi bluez blueman xbacklight scrot i3lock nautilus xfce4-power-manager curl tar grep gpg sed
 
 clear
 # install sddm
@@ -67,10 +67,8 @@ read spicetify_opt
         sudo mkdir -p /etc/apt/keyrings
         curl -sS https://download.spotify.com/debian/pubkey_6224F9941A8AA6D1.gpg | sudo gpg --dearmor --yes -o /etc/apt/trusted.gpg.d/spotify.gpg
 		echo "deb http://repository.spotify.com stable non-free" | sudo tee /etc/apt/sources.list.d/spotify.list
-        echo "deb [arch=amd64 signed-by=/etc/apt/keyrings/spotify.gpg] http://repository.spotify.com stable non-free" | sudo tee /etc/apt/sources.list.d/spotify.list
         sudo apt update
         sudo apt install -y spotify-client
-
         ### prompt for username to install spicetify
         export PATH="$PATH:/home/$USER/.spicetify"
         ### Spicetify
@@ -85,6 +83,49 @@ clear
 echo "Cleanning up..."
 cd
 rm -rf req_font/ build/ picom*/ dotfiles/
+
+#Nvidia driver
+
+# need prompt to ask user
+clear
+sudo cp /etc/apt/sources.list /etc/apt/sources.list.backup
+echo "## for nvidia" | sudo tee -a /etc/apt/sources.list
+echo "deb http://deb.debian.org/debian/ trixie main contrib non-free non-free-firmware" | sudo tee -a /etc/apt/sources.list
+sudo apt update
+sudo apt install -y linux-headers-amd64 nvidia-driver firmware-misc-nonfree
+
+## Secure Boot (Optional)
+clear
+if [ sudo mokutil --sb-state | grep -q "enabled" ]; then
+    if [ ! -d /var/lib/shim-signed/mok/ ]; then
+		sudo mkdir -p /var/lib/shim-signed/mok/
+		cd /var/lib/shim-signed/mok/
+		sudo openssl req -nodes -new -x509 -newkey rsa:2048 -keyout MOK.priv -outform DER -out MOK.der -days 36500 -subj "/CN=My Name/"
+		sudo openssl x509 -inform der -in MOK.der -out MOK.pem
+		echo "You will be prompt for one-time password." && sleep 1
+		sudo mokutil --import /var/lib/shim-signed/mok/MOK.der
+		echo "mok_signing_key="/var/lib/shim-signed/mok/MOK.priv"" | sudo tee -a /etc/dkms/framework.conf
+		echo "mok_certificate="/var/lib/shim-signed/mok/MOK.der"" | sudo tee -a /etc/dkms/framework.conf
+		echo "sign_tool="/etc/dkms/sign_helper.sh"" | sudo tee -a /etc/dkms/framework.conf
+		echo "/lib/modules/"$1"/build/scripts/sign-file sha512 /root/.mok/client.priv /root/.mok/client.der "$2"" | sudo tee -a /etc/dkms/sign_helper.sh
+		VERSION="$(uname -r)"
+		SHORT_VERSION="$(uname -r | cut -d . -f 1-2)"
+		MODULES_DIR=/lib/modules/$VERSION
+		KBUILD_DIR=/usr/lib/linux-kbuild-$SHORT_VERSION
+		cd "$MODULES_DIR/updates/dkms"
+		echo -n "Passphrase for the private key: "
+		read -s KBUILD_SIGN_PIN
+		export KBUILD_SIGN_PIN
+		find -name \*.ko | while read i; do sudo --preserve-env=KBUILD_SIGN_PIN "$KBUILD_DIR"/scripts/sign-file sha256 /var/lib/shim-signed/mok/MOK.priv /var/lib/shim-signed/mok/MOK.der "$i" || break; done
+		sudo update-initramfs -k all -u
+		sudo mokutil --import /var/lib/dkms/mok.pub
+	fi
+else
+	echo "Secure Boot is disabled. Continue" && sleep 1
+fi
+
+
+
 
 # Reboot
 echo "All Done. Reboot now? (y/n)"
