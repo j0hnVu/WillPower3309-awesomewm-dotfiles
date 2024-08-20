@@ -20,7 +20,9 @@ if sudo mokutil --sb-state | grep -q "enabled"; then
 		echo -n "Passphrase for the private key: "
 		read -s KBUILD_SIGN_PIN
 		export KBUILD_SIGN_PIN
-		find -name \*.ko | while read i; do sudo --preserve-env=KBUILD_SIGN_PIN "$KBUILD_DIR"/scripts/sign-file sha256 /var/lib/shim-signed/mok/MOK.priv /var/lib/shim-signed/mok/MOK.der "$i" || break; done
+		find -name \*.ko | while read i; do 
+			sudo --preserve-env=KBUILD_SIGN_PIN "$KBUILD_DIR"/scripts/sign-file sha256 /var/lib/shim-signed/mok/MOK.priv /var/lib/shim-signed/mok/MOK.der "$i" || break
+		done
 		sudo update-initramfs -k all -u
 		sudo mokutil --import /var/lib/dkms/mok.pub
 	fi
