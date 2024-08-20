@@ -1,6 +1,8 @@
 #!/bin/bash
 
 # Awesomewm & X11 install script on Debian 12 Minimal Install
+# Need function that handle user input (yn and shit)
+
 # install minimal xorg
 sudo apt install -y xserver-xorg-video-intel xserver-xorg-core xinit 
 
@@ -41,18 +43,22 @@ sudo cp -a ~/dotfiles/. ~/.config/
 
 # oh-my-zsh
 clear
-echo "Do you want to install oh-my-zsh? (y/n)"
+echo "Do you want to install oh-my-zsh and KittyTerminal? (y/n)"
 read zsh_opt
 if [ "$zsh_opt" == "y" ]; then
     echo "Do you want to install powerlevel10's ZSH theme and install some plugins? (y/n)"
     read zsht_opt
+	sudo apt install -y kitty	
     sudo apt install -y zsh
     sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
     if [ "$zsht_opt" == "y" ]; then
         git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/themes/powerlevel10k
+		git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting
+		git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions
         sudo cp ~/.zshrc ~/zshrc.bak
         sudo sed -i 's/^ZSH_THEME=.*$/ZSH_THEME="powerlevel10k\/powerlevel10k"/' "$HOME/.zshrc"
-        sudo sed -i 's/^plugins=(git)$/plugins=(git, zsh-syntax-highlighting, zsh-autosuggestions)/' "$HOME/.zshrc"
+        sudo sed -i 's/^plugins=(git)$/plugins=(git zsh-syntax-highlighting zsh-autosuggestions)/' "$HOME/.zshrc"
+		chsh -s $(which zsh)
     fi
 else
     echo "Won't install ZSH"
@@ -85,14 +91,24 @@ cd
 rm -rf req_font/ build/ picom*/ dotfiles/
 
 #Nvidia driver
-
-# need prompt to ask user
 clear
-sudo cp /etc/apt/sources.list /etc/apt/sources.list.backup
-echo "## for nvidia" | sudo tee -a /etc/apt/sources.list
-echo "deb http://deb.debian.org/debian/ trixie main contrib non-free non-free-firmware" | sudo tee -a /etc/apt/sources.list
-sudo apt update
-sudo apt install -y linux-headers-amd64 nvidia-driver firmware-misc-nonfree
+if lspci -nn | grep -iE 'vga.*nvidia'; then
+	echo "Do you want to install proprietary NVIDIA driver? (y,n)"
+	read nvidia_opt
+	if $nvidia_opt == "y"; then
+		sudo cp /etc/apt/sources.list /etc/apt/sources.list.backup
+		echo "## for nvidia" | sudo tee -a /etc/apt/sources.list
+		echo "deb http://deb.debian.org/debian/ trixie main contrib non-free non-free-firmware" | sudo tee -a /etc/apt/sources.list
+		sudo apt update
+		sudo apt install -y linux-headers-amd64 nvidia-driver firmware-misc-nonfree
+		rm -rf /etc/apt/sources.list
+		sudo cp /etc/apt/sources.list.backup /etc/apt/sources.list
+	else
+		echo "Continue..." && sleep 1
+	fi
+else	
+	echo "Nvidia GPU not found. Continue..." && sleep 1
+fi
 
 ## Secure Boot (Optional)
 clear
