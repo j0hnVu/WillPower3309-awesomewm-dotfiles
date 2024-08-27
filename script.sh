@@ -1,27 +1,27 @@
 #!/bin/bash
 
 # Awesomewm & X11 install script on Debian 12 Minimal Install
-# Need function that handle user input (yn and shit)
+# Need function that handle user input (yn and shit) (idk?)
 
-# install minimal xorg
-sudo apt install -y xserver-xorg-video-intel xserver-xorg-core xinit 
+# for Minimal Install shit only
+## install minimal xorg
+sudo apt install -y xserver-xorg-video-intel xserver-xorg-core xinit
 
-# Rec app and shit
-sudo apt install -y git unzip feh libpcre3-dev rofi imagemagick acpi bluez blueman xbacklight scrot i3lock nautilus xfce4-power-manager curl tar grep gpg sed
-
-clear
-# install sddm
+## install sddm
 sudo apt install --no-install-recommends -y sddm
 
-# install awesome
-sudo apt install awesome -y
+# install awesomewm
+sudo apt install awesome awesome-extra -y
 
-# Dotfiles and shit
+# WillPower3309-awesomewm-dotfiles
+
+## Rec app and shit
+sudo apt install -y git unzip feh libpcre3-dev rofi imagemagick acpi bluez blueman xbacklight scrot i3lock nautilus xfce4-power-manager curl tar grep gpg sed
+
+
 ## picom-ibhagwan
-
 ### Deps
 sudo apt install -y libconfig-dev libdbus-1-dev libegl-dev libev-dev libgl-dev libepoxy-dev libpcre2-dev libpixman-1-dev libx11-xcb-dev libxcb1-dev libxcb-composite0-dev libxcb-damage0-dev libxcb-glx0-dev libxcb-image0-dev libxcb-present-dev libxcb-randr0-dev libxcb-render0-dev libxcb-render-util0-dev libxcb-shape0-dev libxcb-util-dev libxcb-xfixes0-dev meson ninja-build uthash-dev cmake libxext-dev libxcb-xinerama0-dev
-
 ### installation
 git clone https://github.com/ibhagwan/picom.git ./picom-ibhagwan
 cd picom-ibhagwan
@@ -38,10 +38,11 @@ sudo cp *.{ttf,otf} /usr/local/share/fonts
 sudo fc-cache
 cd
 
-## Dotfiles
+
+## Dotfiles assets
 sudo cp -a ~/dotfiles/. ~/.config/
 
-# oh-my-zsh
+## oh-my-zsh
 clear
 echo "Do you want to install oh-my-zsh and KittyTerminal? (y/n)"
 read zsh_opt
@@ -64,7 +65,7 @@ else
     echo "Won't install ZSH"
 fi
 
-# Spicetify
+## Spicetify
 printf "\n"
 echo "Do you want to install Spicetify? (y/n)"
 read spicetify_opt
@@ -83,14 +84,15 @@ read spicetify_opt
         echo "Won't install Spicetify"
     fi
 
-
+## Cleanning up
 clear
-
 echo "Cleanning up..."
 cd
 rm -rf req_font/ build/ picom*/ dotfiles/
 
-#Nvidia driver
+
+# NVIDIA driver
+## proprietary driver install
 clear
 if lspci -nn | grep -iE 'vga.*nvidia'; then
 	echo "Do you want to install proprietary NVIDIA driver? (y,n)"
@@ -110,7 +112,7 @@ else
 	echo "Nvidia GPU not found. Continue..." && sleep 1
 fi
 
-## Secure Boot (Optional)
+## Secure Boot for NVIDIA driver (Optional)
 clear
 if sudo mokutil --sb-state | grep -q "enabled"; then
     if [ ! -d /var/lib/shim-signed/mok/ ]; then
