@@ -3,7 +3,7 @@
 # Awesomewm & X11 install script on Debian 12 Minimal Install
 # Need function that handle user input (yn and shit) (idk?)
 
-# for Minimal Install shit only
+# for Minimal Install only
 ## install minimal xorg
 sudo apt install -y xserver-xorg-video-intel xserver-xorg-core xinit
 
@@ -15,7 +15,7 @@ sudo apt install awesome awesome-extra -y
 
 # WillPower3309-awesomewm-dotfiles
 
-## Rec app and shit
+## Rec app
 sudo apt install -y git unzip feh libpcre3-dev rofi imagemagick acpi bluez blueman xbacklight scrot i3lock nautilus xfce4-power-manager curl tar grep gpg sed
 
 
